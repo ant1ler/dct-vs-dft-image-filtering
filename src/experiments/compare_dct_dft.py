@@ -74,29 +74,48 @@ def _filter_dft_gaussian_lowpass(noisy: np.ndarray, cutoff_ratio: float) -> np.n
         raise ValueError("Ожидается RGB изображение HxWx3.")
 
     rows, cols, _ = noisy.shape
-    mask = _center_rect_mask((rows, cols), cutoff_ratio=cutoff_ratio)
+
+    keep_rows = max(1, int(rows * cutoff_ratio))
+    keep_cols = max(1, int(cols * cutoff_ratio))
+
+    mask = np.zeros((rows, cols), dtype=np.float64)
+
+    r0 = (rows - keep_rows) // 2
+    c0 = (cols - keep_cols) // 2
+
+    mask[r0:r0 + keep_rows, c0:c0 + keep_cols] = 1.0
+
     out = np.zeros_like(noisy, dtype=np.float64)
 
     for ch in range(3):
         channel = noisy[:, :, ch].astype(np.float64)
+
         spectrum = fft_2d(channel)
-        shifted = _fftshift_manual(spectrum)
-        filtered_shifted = shifted * mask
-        filtered = _ifftshift_manual(filtered_shifted)
-        out[:, :, ch] = np.real(ifft_2d(filtered))
+
+        # центрируем спектр
+        spectrum = np.fft.fftshift(spectrum)
+
+        filtered = spectrum * mask
+
+        spectrum = np.fft.ifftshift(filtered)
+
+        out[:, :, ch] = np.real(ifft_2d(spectrum))
 
     return _clip_to_uint8(out)
-
 
 def _filter_dct_lowpass(noisy: np.ndarray, cutoff_ratio: float) -> np.ndarray:
     if noisy.ndim != 3 or noisy.shape[2] != 3:
         raise ValueError("Ожидается RGB изображение HxWx3.")
 
     rows, cols, _ = noisy.shape
+
     keep_rows = max(1, int(rows * cutoff_ratio))
     keep_cols = max(1, int(cols * cutoff_ratio))
+
+    # DCT: НИЗКИЕ ЧАСТОТЫ В ЛЕВОМ ВЕРХНЕМ УГЛУ
     mask = np.zeros((rows, cols), dtype=np.float64)
     mask[:keep_rows, :keep_cols] = 1.0
+
     out = np.zeros_like(noisy, dtype=np.float64)
 
     for ch in range(3):
@@ -273,7 +292,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--results-dir", type=Path, default=Path("data/results"))
     parser.add_argument("--tables-dir", type=Path, default=Path("reports/tables"))
     parser.add_argument("--figures-dir", type=Path, default=Path("reports/figures"))
-    parser.add_argument("--cutoff-ratio", type=float, default=0.12)
+    parser.add_argument("--cutoff-ratio", type=float, default=0.25)
     parser.add_argument("--gaussian-sigma", type=float, default=15.0)
     parser.add_argument("--salt-pepper-amount", type=float, default=0.03)
     parser.add_argument("--gaussian-sigmas", type=str, default="")

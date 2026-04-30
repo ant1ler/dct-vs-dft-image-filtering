@@ -99,17 +99,22 @@ def fft_2d(x: np.ndarray) -> np.ndarray:
     2D FFT: сначала по строкам, потом по столбцам.
     """
     x = np.asarray(x, dtype=complex)
+
     temp = np.apply_along_axis(fft_1d, axis=1, arr=x)
     X = np.apply_along_axis(fft_1d, axis=0, arr=temp)
-    return X
 
+    # Нормализация (ВАЖНО ДЛЯ СРАВНЕНИЯ С DCT)
+    return X / np.sqrt(X.size)
 
 def ifft_2d(X: np.ndarray) -> np.ndarray:
     """
     2D IFFT: сначала по строкам, потом по столбцам.
     """
     X = np.asarray(X, dtype=complex)
+
     temp = np.apply_along_axis(ifft_1d, axis=1, arr=X)
     x = np.apply_along_axis(ifft_1d, axis=0, arr=temp)
-    return x
+
+    # Обратная нормализация
+    return x * np.sqrt(X.size)
 
