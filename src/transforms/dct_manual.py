@@ -2,9 +2,12 @@
 Ручная DCT (DCT-II) и обратное преобразование.
 """
 
+from functools import lru_cache
+
 import numpy as np
 
 
+@lru_cache(maxsize=16)
 def _dct_matrix(n: int) -> np.ndarray:
     """
     Собирает матрицу DCT-II размера n x n (ортонормированную).
@@ -46,9 +49,10 @@ def dct_2d(x: np.ndarray) -> np.ndarray:
     2D DCT: по строкам, потом по столбцам.
     """
     x = np.asarray(x, dtype=float)
-    temp = np.apply_along_axis(dct_1d, axis=1, arr=x)
-    X = np.apply_along_axis(dct_1d, axis=0, arr=temp)
-    return X
+    rows, cols = x.shape
+    Cr = _dct_matrix(rows)
+    Cc = _dct_matrix(cols)
+    return Cr @ x @ Cc.T
 
 
 def idct_2d(X: np.ndarray) -> np.ndarray:
@@ -56,7 +60,8 @@ def idct_2d(X: np.ndarray) -> np.ndarray:
     2D обратное DCT: по строкам, потом по столбцам.
     """
     X = np.asarray(X, dtype=float)
-    temp = np.apply_along_axis(idct_1d, axis=1, arr=X)
-    x = np.apply_along_axis(idct_1d, axis=0, arr=temp)
-    return x
+    rows, cols = X.shape
+    Cr = _dct_matrix(rows)
+    Cc = _dct_matrix(cols)
+    return Cr.T @ X @ Cc
 

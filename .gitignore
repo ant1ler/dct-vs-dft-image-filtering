@@ -29,5 +29,4 @@ env/
 # - keep a small curated set in data/raw/
 # - keep curated results in data/results/ and reports/
 # - noisy/intermediate stuff usually not needed for git
-data/noisy/*
-!data/noisy/.gitkeep
+.cursor/

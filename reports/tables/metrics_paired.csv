@@ -1,0 +1,3 @@
+mode,image,noise,noise_level,method,mse,psnr,ssim_rgb,ssim_channels_mean
+paired,astro,dataset_paired,,dft,466.4525032043457,21.44272932820619,0.5458220115404115,0.5458220115404115
+paired,astro,dataset_paired,,dct,425.11001205444336,21.845790274162113,0.5503161422143487,0.5503161422143487
