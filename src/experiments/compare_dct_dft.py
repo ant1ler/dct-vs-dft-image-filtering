@@ -287,8 +287,8 @@ def _aggregate_means(rows: list[dict[str, str | float]]) -> list[dict[str, str |
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Сравнение фильтрации DCT vs DFT.")
     parser.add_argument("--mode", choices=["paired", "synthetic"], required=True)
-    parser.add_argument("--raw-dir", type=Path, default=Path("data/raw"))
-    parser.add_argument("--noisy-dir", type=Path, default=Path("data/noisy"))
+    parser.add_argument("--paired-dir", type=Path, default=Path("data/paired"))
+    parser.add_argument("--synthetic-dir", type=Path, default=Path("data/synthetic"))
     parser.add_argument("--results-dir", type=Path, default=Path("data/results"))
     parser.add_argument("--tables-dir", type=Path, default=Path("reports/tables"))
     parser.add_argument("--figures-dir", type=Path, default=Path("reports/figures"))
@@ -320,13 +320,24 @@ def generate_report_artifacts(mode: str, tables_dir: Path, figures_dir: Path) ->
 def main() -> None:
     args = parse_args()
 
+    gaussian_sigmas = _parse_float_list(
+    args.gaussian_sigmas,
+    [args.gaussian_sigma, args.gaussian_sigma * 1.5]
+    )
+
+    sp_amounts = _parse_float_list(
+    args.salt_pepper_amounts,
+    [args.salt_pepper_amount, args.salt_pepper_amount * 1.5]
+    )
+
     if args.mode == "paired":
-        items = _collect_paired_items(args.raw_dir, args.noisy_dir)
+        items = _collect_paired_items(
+            args.paired_dir / "raw",
+            args.paired_dir / "noisy"
+        )
     else:
-        gaussian_sigmas = _parse_float_list(args.gaussian_sigmas, [args.gaussian_sigma, args.gaussian_sigma * 1.5])
-        sp_amounts = _parse_float_list(args.salt_pepper_amounts, [args.salt_pepper_amount, args.salt_pepper_amount * 1.5])
         items = _collect_synthetic_items(
-            args.raw_dir,
+            args.synthetic_dir / "raw",
             gaussian_sigmas=gaussian_sigmas,
             sp_amounts=sp_amounts,
             seed=args.seed,
